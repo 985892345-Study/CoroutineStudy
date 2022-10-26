@@ -55,11 +55,15 @@ class GeneratorIterator<T>(
     val currentState = state
     if (currentState is State.NotReady) {
       // 如果没有初始化的话就开始初始化
-      // 这里最终会调用到 for (i in 0..5) 开始进行循环，然后遇到第一个 yield() 挂起
+      // 这里最终会调用到 for (i in 0..5) 开始进行循环，然后遇到下一个 yield() 挂起
       currentState.continuation.resume(Unit)
     }
   }
 
+  /**
+   * haseNext() 用于恢复挂起点，因为循环体中不能调度到其他线程中去，
+   * 所以得到下一次值这个过程是同步执行的
+   */
   override fun hasNext(): Boolean {
     resume()
     return state != State.Done
