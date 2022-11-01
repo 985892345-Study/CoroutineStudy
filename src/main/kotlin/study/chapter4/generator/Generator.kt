@@ -1,4 +1,4 @@
-package study.coroutine.generator
+package study.chapter4.generator
 
 import kotlin.coroutines.*
 

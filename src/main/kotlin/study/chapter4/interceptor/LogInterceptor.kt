@@ -1,4 +1,4 @@
-package study.coroutine.interceptor
+package study.chapter4.interceptor
 
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.ContinuationInterceptor

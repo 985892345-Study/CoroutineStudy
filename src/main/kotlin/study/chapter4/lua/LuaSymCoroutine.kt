@@ -1,4 +1,4 @@
-package study.coroutine.lua
+package study.chapter4.lua
 
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
@@ -23,7 +23,7 @@ class SymCoroutine<T>(
     lateinit var main: SymCoroutine<Any?>
 
     suspend fun main(block: suspend SymCoroutineScope<Any?>.() -> Unit) {
-      SymCoroutine<Any?> { block() }.also { main = it }.start(Unit)
+      SymCoroutine { block() }.also { main = it }.start(Unit)
     }
 
     fun <T> create(
@@ -40,11 +40,12 @@ class SymCoroutine<T>(
     get() = this == main
 
   private val body: SymCoroutineScope<T> = object : SymCoroutineScope<T> {
-    private tailrec suspend fun <P> transferInner(symCoroutine: SymCoroutine<P>, value: Any?): T{
+    private tailrec suspend fun <P> transferInner(symCoroutine: SymCoroutine<P>, value: Any?): T {
       if(this@SymCoroutine.isMain){
         return if(symCoroutine.isMain){
           value as T
         } else {
+          // 挂起当前协程作用域运行
           val parameter = symCoroutine.coroutine.resume(value as P)
           transferInner(parameter.coroutine, parameter.value)
         }
@@ -77,7 +78,7 @@ class SymCoroutine<T>(
 }
 
 object SymCoroutines {
-  val coroutine0: SymCoroutine<Int> = SymCoroutine.create<Int> { param: Int ->
+  val coroutine0: SymCoroutine<Int> = SymCoroutine.create { param: Int ->
     println("coroutine-0 $param")
     var result = transfer(coroutine2, 0)
     println("coroutine-0 1 $result")

@@ -1,4 +1,4 @@
-package study.coroutine.lua
+package study.chapter4.lua
 
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
@@ -65,9 +65,11 @@ class Coroutine<P, R> (
     get() = status.get() != Status.Dead
 
   init {
-    val coroutineBlock: suspend CoroutineScope<P, R>.() -> R = { block(parameter!!) }
+    val coroutineBlock: suspend CoroutineScope<P, R>.() -> R = {
+      block(parameter!!)
+    }
     /*
-    * 注意：这里是创建了一个新的协程，但这个协程持有当前 Coroutine<P, R> 类的引用
+    * 注意：这里是创建了一个新的协程作用域，但这个协程持有当前 Coroutine<P, R> 类的引用
     * */
     val start = coroutineBlock.createCoroutine(scope, this)
     status = AtomicReference(Status.Created(start))
@@ -129,7 +131,7 @@ class Coroutine<P, R> (
     }
   }
 
-  suspend fun <SymT> SymCoroutine<SymT>.yield(value: R): P {
+  suspend fun yield(value: R): P {
     return scope.yield(value)
   }
 }
@@ -162,7 +164,7 @@ suspend fun main() {
     200
   }
 
-  val consumer = Coroutine.create<Int, Unit>(Dispatcher()) { param: Int ->
+  val consumer = Coroutine.create(Dispatcher()) { param: Int ->
     println("start $param")
     for (i in 0..3) {
       val value = yield(Unit)

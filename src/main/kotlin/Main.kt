@@ -1,21 +1,51 @@
-import study.coroutine.context.TestCoroutineContext
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
-import kotlin.coroutines.startCoroutine
+import kotlinx.coroutines.*
+import kotlin.concurrent.thread
 
 fun main() {
-  suspend {
-    coroutineContext
-    1
-  }.startCoroutine(
-    object : Continuation<Int> {
-      override val context: CoroutineContext
-        get() = TestCoroutineContext()
-
-      override fun resumeWith(result: Result<Int>) {
-        context[TestCoroutineContext]?.key
+  GlobalScope.launch {
+    println(".(Main.kt:${Exception().stackTrace[0].lineNumber}) " +
+        "launch: $coroutineContext")
+    launch {
+      println(".(Main.kt:${Exception().stackTrace[0].lineNumber}) " +
+                "launch1: $coroutineContext")
+      launch(SupervisorJob(coroutineContext[Job])) {
+        println(".(Main.kt:${Exception().stackTrace[0].lineNumber}) " +
+                  "launch11: $coroutineContext")
+        launch {
+          println(".(Main.kt:${Exception().stackTrace[0].lineNumber}) " +
+                    "launch111: $coroutineContext")
+          observeCancel("launch111")
+        }
+        launch {
+          println(".(Main.kt:${Exception().stackTrace[0].lineNumber}) " +
+                    "launch112: $coroutineContext")
+          delay(1000)
+          println(".(Main.kt:${Exception().stackTrace[0].lineNumber}) " +
+            "launch112 throw")
+          throw RuntimeException()
+        }
+        observeCancel("launch11")
+      }
+      launch {
+        println(".(Main.kt:${Exception().stackTrace[0].lineNumber}) " +
+                  "launch12: $coroutineContext")
+        observeCancel("launch12")
       }
     }
-  )
+    println(".(Main.kt:${Exception().stackTrace[0].lineNumber}) " +
+      "launch ...")
+    observeCancel("launch")
+  }
+  thread {
+    while (true);
+  }
+}
+
+suspend fun observeCancel(tag: String) = suspendCancellableCoroutine<Unit> {
+  it.invokeOnCancellation {
+    println(
+      ".(Main.kt:${Exception().stackTrace[0].lineNumber}) " +
+        "tag = $tag   Cancel"
+    )
+  }
 }
